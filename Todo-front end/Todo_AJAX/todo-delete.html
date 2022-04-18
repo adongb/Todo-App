@@ -1,0 +1,52 @@
+
+<!DOCTYPE HTML>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Student Delete</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+
+<body>
+    <div class="block-center">
+
+        <h2>Todo Delete</h1>
+        <p id="deleteMessage"></p>
+        <input class="inline" id="deleteID" type="button" value="Delete" onclick="deleteList()">
+
+        <form action="todo-list.html" Method="get">
+            <button type="submit">Cancel</button>
+        </form>
+    </div>
+    <script>
+        function urlParam(name) {
+            var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+            if (results == null) {
+                return null;
+            } else {
+                return results[1] || 0;
+            }
+        }
+        function deleteList() {
+            console.log("deleted");
+            document.getElementById("deleteMessage").innerHTML = "Record Deleted"
+            document.getElementById("deleteID").setAttribute('disabled', true);
+            var xmlhttp = new XMLHttpRequest();
+
+            xmlhttp.onreadystatechange = function () {
+                if (xmlhttp.readyState === 4 && xmlhttp.status === 200) {
+                    console.log('Delete success ');
+                    window.location.assign('todo-list.html');
+                } else if (xmlhttp.readyState === 4) {
+                    console.log('Delete error ' + this.statusText);
+                    console.log('incoming Text ' + this.responseText);
+                }
+            };
+            xmlhttp.open('DELETE', '/todoapi/lists/' + urlParam('id'), true);
+            xmlhttp.send();
+        }
+
+    </script>
+</body>
+</html>
