@@ -1,0 +1,445 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="style.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+  </head>
+  <body>
+    <script>
+      var token = localStorage.getItem("token");
+      if (token != "" && token != null) {
+        var authheader = JSON.parse(
+          '{"Authorization" : "Bearer ' + token + '"}'
+        );
+      } else {
+        var authheader = "";
+      }
+      var id;
+      function urlParam(name) {
+        var results = new RegExp("[\?&]" + name + "=([^&#]*)").exec(
+          window.location.href
+        );
+        if (results == null) {
+          return null;
+        } else {
+          return results[1] || 0;
+        }
+      }
+
+      function updateList() {
+        var name = $("#name").val();
+
+        $.ajax({
+          url: "/todoapi/lists/" + urlParam("id"),
+          type: "PUT",
+          dataType: "json",
+          contentType: "application/json",
+          headers: authheader,
+          data: "{" + '"name" :"' + name + '"' + "}",
+          statusCode: {
+            200: function(response) {
+              console.log("Success");
+              $("#page-message").html("List Updated");
+            },
+            400: function(response) {
+              let message = response.responseJSON.message;
+              $("#page-message").html(message);
+            },
+
+            404: function(jqXHR, textStatus, errorThrown) {
+              $("#page-message").html("Error:" + textStatus);
+              consule.log(errorThrown);
+              console.log("error " + textStatus);
+              console.log("incoming Text " + jqXHR.responseText);
+            }
+          }
+        });
+      }
+      function createItemTable(id) {
+        $.ajax({
+          url: "/todoapi/lists/" + id + "/items",
+          type: "GET",
+          dataType: "json",
+          contentType: "application/json",
+          headers: authheader,
+          statusCode: {
+            200: function(response) {
+              var myObj = response.items;
+              var tableHTML =
+                "<tr><th >Complete</th><th width= 75px>Name</th><th width=250px>Description</th><th width=75px>State</th><th width=100px>Action</th></tr>";
+              $.each(response.items, function(i, item) {
+                let boxcheck = "";
+                if (item.state === "complete") boxcheck = "checked";
+                tableHTML +=
+                  "<tr>" +
+                  "<td>" +
+                  "<input type='checkbox' id='stateBox" +
+                  item.id +
+                  "' " +
+                  boxcheck +
+                  "  onClick='updateItem(" +
+                  item.id +
+                  ")'>" +
+                  "</td>" +
+                  "<td>" +
+                  "<input type='text' id='name" +
+                  item.id +
+                  "' value='" +
+                  item.name +
+                  "' >" +
+                  "</td>" +
+                  "<td>" +
+                  "<input type='text' size='50' id='description" +
+                  item.id +
+                  "' value='" +
+                  item.description +
+                  "' >" +
+                  "</td>" +
+                  "<td>" +
+                  "<input type ='text' id='state" +
+                  item.id +
+                  "' value='" +
+                  item.state +
+                  "' >" +
+                  "</td>" +
+                  "<td><button class ='littlebutton' onClick='updateItem(" +
+                  item.id +
+                  ")'>Save</button>" +
+                  "  <button class ='littlebutton' onClick='deleteItem(" +
+                  item.id +
+                  ")'>Delete</button>" +
+                  "</td>" +
+                  "</tr>";
+              });
+              tableHTML +=
+                "<tr>" +
+                "<td>" +
+                "<input type='checkbox' id='stateBox' hidden/>" +
+                "</td>" +
+                "<td>" +
+                "<input type='text' id='nameAdd' hidden>" +
+                "</td>" +
+                "<td>" +
+                "<input type='text' size='50' id='descriptionAdd' hidden>" +
+                "</td>" +
+                "<td>" +
+                "<input type ='text' id='stateAdd' value='in-progress' hidden>" +
+                "</td>" +
+                "<td><button class ='littlebutton' id='saveAdd' onClick='addItem()' hidden>Save</button>" +
+                "  <button class ='littlebutton' id='addAdd' onClick='addDisplay()'>Add</button>" +
+                "</td>" +
+                "</tr>";
+              $("#todoitem-list-table").html(tableHTML);
+            },
+            400: function(response) {
+              let message = response.responseJSON.message;
+              $("#page-message").html(message);
+            },
+
+            404: function(jqXHR, textStatus, errorThrown) {
+              $("#page-message").html("Error:" + textStatus);
+              consule.log(errorThrown);
+              console.log("error " + textStatus);
+              console.log("incoming Text " + jqXHR.responseText);
+            }
+          }
+        });
+      }
+      function deleteList() {
+        $.ajax({
+          url: "/todoapi/lists/" + urlParam("id"),
+          type: "DELETE",
+          dataType: "json",
+          contentType: "application/json",
+          headers: authheader,
+          statusCode: {
+            200: function(response) {
+              $("#page-message").html("List Deleted");
+              window.location.assign("todo-list.html");
+            },
+            400: function(response) {
+              let message = response.responseJSON.message;
+              $("#page-message").html(message);
+            },
+
+            404: function(jqXHR, textStatus, errorThrown) {
+              $("#page-message").html("Error:" + textStatus);
+              consule.log(errorThrown);
+              console.log("error " + textStatus);
+              console.log("incoming Text " + jqXHR.responseText);
+            }
+          }
+        });
+      }
+
+      function goLists() {
+        window.location.assign("todo-list.html");
+      }
+
+      function deleteItem(id) {
+        $.ajax({
+          url: "/todoapi/lists/" + urlParam("id") + "/items/" + id,
+          type: "DELETE",
+          dataType: "json",
+          contentType: "application/json",
+          headers: authheader,
+          statusCode: {
+            200: function(response) {
+              $("#page-message").html("Item Deleted");
+              createItemTable(urlParam("id"));
+            },
+            400: function(response) {
+              let message = response.responseJSON.message;
+              $("#page-message").html(message);
+            },
+
+            404: function(jqXHR, textStatus, errorThrown) {
+              $("#page-message").html("Error:" + textStatus);
+              consule.log(errorThrown);
+              console.log("error " + textStatus);
+              console.log("incoming Text " + jqXHR.responseText);
+            }
+          }
+        });
+      }
+      function updateItem(id) {
+        let name = $("#name" + id).val();
+        let description = $("#description" + id).val();
+        let state = "";
+        if ($("#stateBox" + id).prop("checked")) {
+          state = "complete";
+          $("#state" + id).val("complete");
+        } else {
+          state = "in-progress";
+          $("#state" + id).val("in-progress");
+        }
+
+        var data =
+          "{" +
+          '"name" :"' +
+          name +
+          '",' +
+          '"description" :"' +
+          description +
+          '",' +
+          '"state" :"' +
+          state +
+          '"' +
+          "}";
+
+        $.ajax({
+          url: "/todoapi/lists/" + urlParam("id") + "/items/" + id,
+          type: "PUT",
+          dataType: "json",
+          contentType: "application/json",
+          headers: authheader,
+          data: data,
+          statusCode: {
+            200: function(response) {
+              $("#page-message").html("Item Updated");
+            },
+            400: function(response) {
+              let message = response.responseJSON.message;
+              $("#page-message").html(message);
+            },
+
+            404: function(jqXHR, textStatus, errorThrown) {
+              $("#page-message").html("Error:" + textStatus);
+              consule.log(errorThrown);
+              console.log("error " + textStatus);
+              console.log("incoming Text " + jqXHR.responseText);
+            }
+          }
+        });
+      }
+
+      function addDisplay() {
+        $("#nameAdd").show();
+        $("#descriptionAdd").show();
+        $("#stateAdd").show();
+        $("#saveAdd").show();
+        $("#addAdd").hide();
+      }
+
+      function addItem(id) {
+        let name = $("#nameAdd").val();
+        let description = $("#descriptionAdd").val();
+        let state = $("#stateAdd").val();
+        var data =
+          "{" +
+          '"name" :"' +
+          name +
+          '",' +
+          '"description" :"' +
+          description +
+          '",' +
+          '"state" :"' +
+          state +
+          '"' +
+          "}";
+
+        $.ajax({
+          url: "/todoapi/lists/" + urlParam("id") + "/items/",
+          type: "POST",
+          dataType: "json",
+          contentType: "application/json",
+          headers: authheader,
+          data: data,
+          statusCode: {
+            201: function(response) {
+              $("#page-message").html("Item Added");
+              createItemTable(urlParam("id"));
+            },
+            400: function(response) {
+              let message = response.responseJSON.message;
+              $("#page-message").html(message);
+            },
+
+            404: function(jqXHR, textStatus, errorThrown) {
+              $("#page-message").html("Error:" + textStatus);
+              consule.log(errorThrown);
+              console.log("error " + textStatus);
+              console.log("incoming Text " + jqXHR.responseText);
+            }
+          }
+        });
+      }
+
+      function getCurrentUser() {
+        if (token != "" && token != null) {
+          $.ajax({
+            url: "/todoapi/users",
+            type: "GET",
+            dataType: "json",
+            contentType: "application/json",
+            headers: authheader,
+            statusCode: {
+              200: function(response) {
+                console.log("Get Current User Succesful");
+                currentUser =
+                  response.user.firstName + " " + response.user.lastName;
+                displayCurrentUser();
+              },
+              400: function(response) {
+                let message = response.responseJSON.message;
+                $("#page-message").html(message);
+                currentUser = "";
+                displayCurrentUser();
+              },
+              404: function(jqXHR, textStatus, errorThrown) {
+                $("#page-message").html("Error:" + textStatus);
+                consule.log(errorThrown);
+                console.log("error " + textStatus);
+                console.log("incoming Text " + jqXHR.responseText);
+              }
+            }
+          });
+        } else {
+          currentUser = "";
+          displayCurrentUser();
+        }
+      }
+      function displayCurrentUser() {
+        if (currentUser === "") {
+          $("#currentUser").html(
+            "No user logged in ( <a href ='todo-login.html'>Login</a>)"
+          );
+        } else {
+          $("#currentUser").html(
+            "Hello, " +
+              currentUser +
+              " (<span class ='likea' onclick='logout()'>Logout</span>)"
+          );
+        }
+      }
+      function logout() {
+        $.ajax({
+          url: "/todoapi/users/logout",
+          type: "POST",
+          dataType: "json",
+          contentType: "application/json",
+          headers: authheader,
+          statusCode: {
+            200: function(response) {
+              console.log("Log out Succesful");
+              $("#page-message").html("Log out Successful");
+              token = "";
+              localStorage.setItem("token", "");
+              currentUser = "";
+              window.location.assign("todo-list.html");
+            },
+            400: function(response) {
+              let message = response.responseJSON.message;
+              $("#page-message").html(message);
+            },
+            404: function(jqXHR, textStatus, errorThrown) {
+              $("#page-message").html("Error:" + textStatus);
+              consule.log(errorThrown);
+              console.log("error " + textStatus);
+              console.log("incoming Text " + jqXHR.responseText);
+            }
+          }
+        });
+      }
+      $(document).ready(function() {
+        $("#update").click(function() {
+          updateList();
+        });
+        $("#delete").click(function() {
+          deleteList();
+        });
+        $("#lists").click(function() {
+          goLists();
+        });
+        $.ajax({
+          url: "/todoapi/lists/" + urlParam("id"),
+          type: "GET",
+          dataType: "json",
+          contentType: "application/json",
+          headers: authheader,
+          statusCode: {
+            200: function(response) {
+              $("#name").val(response.list.name);
+            },
+            400: function(response) {
+              let message = response.responseJSON.message;
+              $("#page-message").html(message);
+            },
+
+            404: function(jqXHR, textStatus, errorThrown) {
+              $("#page-message").html("Error:" + textStatus);
+              consule.log(errorThrown);
+              console.log("error " + textStatus);
+              console.log("incoming Text " + jqXHR.responseText);
+            }
+          }
+        });
+        createItemTable(urlParam("id"));
+        getCurrentUser();
+      });
+    </script>
+
+    <h2>Todo List Update</h2>
+
+    <div class="block-center">
+      <p><span id="currentUser"></span></p>
+
+      <p>
+        <span id="page-message"
+          >Edit the items below and click Save</span
+        >
+      </p>
+
+      Name: <input type="text" id="name" />
+      <button id="update">Update</button>
+      <button id="delete">Delete</button>
+      <button id="lists">Lists</button>
+
+      <br /><br />
+      <div id="todoitem-table">
+        <table class="center" id="todoitem-list-table"></table>
+      </div>
+    </div>
+  </body>
+</html>

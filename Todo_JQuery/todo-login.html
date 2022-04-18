@@ -1,0 +1,62 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="style.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+  </head>
+  <body>
+    <script>
+      function login() {
+        var username = $("#username").val();
+        var password = $("#password").val();
+        $.ajax({
+          url: "/todoapi/users/login",
+          type: "POST",
+          dataType: "json",
+          contentType: "application/json",
+          headers: {
+            Authorization: "Basic " + btoa(username + ":" + password)
+          },
+          statusCode: {
+            200: function(response) {
+              console.log("Successfully logged In" + btoa(username + ":" + password));
+              $("#page-message").html("Successfully logged In");
+              localStorage.setItem("token", response.token);
+              window.location.assign("todo-list.html");
+            },
+            401: function(response) {
+              let message = response.responseJSON.message;
+              $("#page-message").html(message);
+            },
+
+            404: function(jqXHR, textStatus, errorThrown) {
+              $("#page-message").html("Error:" + textStatus);
+              consule.log(errorThrown);
+              console.log("error " + textStatus);
+              console.log("incoming Text " + jqXHR.responseText);
+            }
+          }
+        });
+      }
+    </script>
+
+    <h2>Login</h2>
+    <p id="debug"></p>
+    <div class="block-center">
+      <p><span id="page-message">Please enter fields and click Login</span></p>
+      <p><span class="error-head">* required field.</span></p>
+
+      Username: <input type="text" id="username" />
+      <span id="firstNameErr" class="error">* </span>
+      <br /><br />
+      Password: <input type="text" id="password" />
+      <span id="firstNameErr" class="error">* </span>
+      <br /><br />
+      <button onclick="login()">Login</button>
+
+      <br />
+      <a href="todo-adduser.html">Need to add a user? Click here</a>
+    </div>
+  </body>
+</html>

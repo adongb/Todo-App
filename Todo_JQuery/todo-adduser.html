@@ -1,0 +1,87 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="style.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+  </head>
+  <body>
+    <script>
+      function saveUser() {
+        var firstname = $("#firstname").val();
+        var lastname = $("#lastname").val();
+        var username = $("#username").val();
+        var password = $("#password").val();
+        var data =
+          "{" +
+          '"firstName" : "' +
+          firstname +
+          '","lastName" : "' +
+          lastname +
+          '","username" : "' +
+          username +
+          '","password" : "' +
+          password +
+          '"}';
+        $.ajax({
+          url: "/todoapi/users",
+          type: "POST",
+          dataType: "json",
+          contentType: "application/json",
+          data: data,
+          statusCode: {
+            201: function(response) {
+              console.log("User has been added succesfully");
+              $("#page-message").html("User added successfully");
+              window.localStorage.setItem("token", response.token);
+              window.location.assign("todo-list.html");
+            },
+            400: function(response) {
+              let message = response.responseJSON.message;
+              $("#page-message").html(message);
+            },
+
+            404: function(jqXHR, textStatus, errorThrown) {
+              $("#page-message").html("Error:" + textStatus);
+              consule.log(errorThrown);
+              console.log("error " + textStatus);
+              console.log("incoming Text " + jqXHR.responseText);
+            }
+          }
+        });
+      }
+      function cancel() {
+        window.location.assign("todo-login.html");
+      }
+      $(document).ready(function() {
+        $("#saveUserButton").click(function() {
+          saveUser();
+        });
+        $("#cancelButton").click(function() {
+          cancel();
+        });
+      });
+    </script>
+
+    <h2>User Add</h2>
+    <div class="block-center">
+      <p><span id="page-message">Please enter the fields and click Save</span></p>
+      <p><span class="error-head">* required field.</span></p>
+
+      First Name: <input type="text" id="firstname" />
+      <span id="firstNameErr" class="error">* </span>
+      <br /><br />
+      Last Name: <input type="text" id="lastname" />
+      <span id="firstNameErr" class="error">* </span>
+      <br /><br />
+      Username: <input type="text" id="username" />
+      <span id="firstNameErr" class="error">* </span>
+      <br /><br />
+      Password: <input type="text" id="password" />
+      <span id="firstNameErr" class="error">* </span>
+      <br /><br />
+      <button id="saveUserButton">Save</button>
+      <button id="cancelButton">Cancel</button>
+    </div>
+  </body>
+</html>
